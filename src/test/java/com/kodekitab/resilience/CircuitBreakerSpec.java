@@ -7,18 +7,20 @@ import static org.hamcrest.core.Is.is;
 
 public class CircuitBreakerSpec {
 
+    HelloWorldService service = new HelloWorldService();
+
     @Test
     public void externalServiceIsNotInvokedIfFailureThresholdIsExceeded() {
 
-        HelloWorldService service = new HelloWorldService();
-        CircuitBreaker circuitBreaker = new CircuitBreaker(service)
+        CircuitBreaker<String> circuitBreaker = new CircuitBreaker<String>()
                 .requestThreshold(5)
-                .resetIntervalInMilliseconds(6000);
-        circuitBreaker.run();
-        circuitBreaker.run();
-        circuitBreaker.run();
-        circuitBreaker.run();
-        circuitBreaker.run();
+                .resetIntervalIn(6000);
+
+        circuitBreaker.run(() -> service.getMessage());
+        circuitBreaker.run(() -> service.getMessage());
+        circuitBreaker.run(() -> service.getMessage());
+        circuitBreaker.run(() -> service.getMessage());
+        circuitBreaker.run(() -> service.getMessage());
 
         assertThat(service.noOfCalls, is(5));
     }
@@ -27,20 +29,19 @@ public class CircuitBreakerSpec {
     public void externalServiceIsNotInvokedIfFailureThresholdIsExceededWithinResetInterval()
             throws InterruptedException {
 
-        HelloWorldService service = new HelloWorldService();
-        CircuitBreaker circuitBreaker = new CircuitBreaker(service)
+        CircuitBreaker circuitBreaker = new CircuitBreaker()
                 .requestThreshold(5)
-                .resetIntervalInMilliseconds(1500);
+                .resetIntervalIn(1500);
 
-        circuitBreaker.run();
-        circuitBreaker.run();
-        circuitBreaker.run();
-        circuitBreaker.run();
-        circuitBreaker.run();
+        circuitBreaker.run(() -> service.getMessage());
+        circuitBreaker.run(() -> service.getMessage());
+        circuitBreaker.run(() -> service.getMessage());
+        circuitBreaker.run(() -> service.getMessage());
+        circuitBreaker.run(() -> service.getMessage());
 
         Thread.sleep(1000);
 
-        circuitBreaker.run();
+        circuitBreaker.run(() -> service.getMessage());
 
         assertThat(service.noOfCalls, is(5));
     }
@@ -49,20 +50,19 @@ public class CircuitBreakerSpec {
     public void externalServiceIsInvokedIfResetIntervalHasElapsedAfterExceedingThreshold()
             throws InterruptedException {
 
-        HelloWorldService service = new HelloWorldService();
-        CircuitBreaker circuitBreaker = new CircuitBreaker(service)
+        CircuitBreaker circuitBreaker = new CircuitBreaker()
                 .requestThreshold(5)
-                .resetIntervalInMilliseconds(2000);
+                .resetIntervalIn(2000);
 
-        circuitBreaker.run();
-        circuitBreaker.run();
-        circuitBreaker.run();
-        circuitBreaker.run();
-        circuitBreaker.run();
+        circuitBreaker.run(() -> service.getMessage());
+        circuitBreaker.run(() -> service.getMessage());
+        circuitBreaker.run(() -> service.getMessage());
+        circuitBreaker.run(() -> service.getMessage());
+        circuitBreaker.run(() -> service.getMessage());
 
         Thread.sleep(3000);
 
-        circuitBreaker.run();
+        circuitBreaker.run(() -> service.getMessage());
 
         assertThat(service.noOfCalls, is(6));
     }
