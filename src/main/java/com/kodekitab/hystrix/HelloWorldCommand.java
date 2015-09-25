@@ -1,13 +1,13 @@
 package com.kodekitab.hystrix;
 
-import com.kodekitab.resilience.HelloWorldService;
+import com.kodekitab.resilience.HelloWorld;
 import com.netflix.hystrix.HystrixCommand;
 
 public class HelloWorldCommand extends HystrixCommand<String> {
 
-    private final HelloWorldService service;
+    private final HelloWorld service;
 
-    public HelloWorldCommand(HelloWorldService service, Setter defaults) {
+    public HelloWorldCommand(HelloWorld service, Setter defaults) {
         super(defaults);
         this.service = service;
     }

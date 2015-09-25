@@ -1,5 +1,6 @@
 package com.kodekitab.resilience;
 
+import com.kodekitab.hystrix.FailingHelloWorld;
 import org.junit.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -8,7 +9,7 @@ import static org.hamcrest.core.IsNull.notNullValue;
 
 public class CircuitBreakerSpec {
 
-    HelloWorldService service = new HelloWorldService();
+    FailingHelloWorld service = new FailingHelloWorld();
 
     @Test
     public void externalServiceIsInvokedAsManyTimesAsTheSpecifiedThreshold()
