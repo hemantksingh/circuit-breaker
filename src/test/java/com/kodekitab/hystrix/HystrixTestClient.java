@@ -6,6 +6,9 @@ import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.netflix.hystrix.HystrixCommandProperties;
 import org.junit.Test;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
+
 public class HystrixTestClient {
 
     @Test
@@ -14,8 +17,7 @@ public class HystrixTestClient {
         HystrixCommand.Setter defaultConfig = HystrixCommand.Setter
                 .withGroupKey(HystrixCommandGroupKey.Factory.asKey(key))
                 .andCommandPropertiesDefaults(HystrixCommandProperties.Setter()
-                        .withExecutionTimeoutInMilliseconds(10000)
-                        .withRequestCacheEnabled(false)
+                        .withExecutionTimeoutInMilliseconds(2000)
                         .withCircuitBreakerRequestVolumeThreshold(5));
 
         HelloWorldService service = new HelloWorldService();
@@ -25,6 +27,6 @@ public class HystrixTestClient {
             command.execute();
         }
 
-        System.out.println("No of calls: " + service.noOfCalls);
+        assertThat(service.noOfCalls, is(5));
     }
 }

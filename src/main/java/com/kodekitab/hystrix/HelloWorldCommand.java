@@ -3,7 +3,7 @@ package com.kodekitab.hystrix;
 import com.kodekitab.resilience.HelloWorldService;
 import com.netflix.hystrix.HystrixCommand;
 
-public class HelloWorldCommand extends HystrixCommand<String>{
+public class HelloWorldCommand extends HystrixCommand<String> {
 
     private final HelloWorldService service;
 
@@ -19,6 +19,7 @@ public class HelloWorldCommand extends HystrixCommand<String>{
 
     @Override
     protected String run() throws Exception {
-      return service.getMessage();
+        Thread.sleep(100);
+        return service.getMessage();
     }
 }
