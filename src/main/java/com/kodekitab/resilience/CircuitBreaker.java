@@ -7,24 +7,24 @@ import java.util.logging.Logger;
 
 public class CircuitBreaker<T> {
 
-    private static Logger logger = Logger.getLogger(CircuitBreaker.class.getName());
+    private static final Logger logger = Logger.getLogger(CircuitBreaker.class.getName());
     private int failureCount;
     private final int threshold;
     private final long resetInterval;
 
-    private CircuitBreaker(int failureCount, int threshold, long resetInterval) {
+    private CircuitBreaker(int failureCount, int threshold, long closingInterval) {
         this.failureCount = failureCount;
         this.threshold = threshold;
-        this.resetInterval = resetInterval;
+        this.resetInterval = closingInterval;
 
-        startTimer(this);
+        closeCircuitPeriodically(this);
     }
 
     public CircuitBreaker() {
-        this(0, 5, 200);
+        this(0, 5, 20000);
     }
 
-    private static void  startTimer(CircuitBreaker circuitBreaker) {
+    private static void closeCircuitPeriodically(CircuitBreaker circuitBreaker) {
         new Timer().scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
@@ -41,18 +41,20 @@ public class CircuitBreaker<T> {
         return new CircuitBreaker(failureCount, threshold, milliseconds);
     }
 
-    public void run(Supplier<T> action) {
-        try {
-            if (isClosed())
-                action.get();
+    public void invoke(Supplier<T> action) throws CircuitBreakerException {
+        if (this.isOpen())
+            throw new CircuitBreakerException("The underlying service is not responding.");
+
+        else try {
+            action.get();
         } catch (Exception e) {
             failureCount++;
         }
     }
 
-    private  boolean isClosed() {
+    private boolean isOpen() {
         logger.info("failure count: " + failureCount + " threshold: " + threshold);
-        return failureCount < threshold;
+        return failureCount >= threshold;
     }
 
     private void close() {

@@ -4,65 +4,79 @@ import org.junit.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsNull.notNullValue;
 
 public class CircuitBreakerSpec {
 
     HelloWorldService service = new HelloWorldService();
 
     @Test
-    public void externalServiceIsNotInvokedIfFailureThresholdIsExceeded() {
+    public void externalServiceIsInvokedAsManyTimesAsTheSpecifiedThreshold()
+            throws CircuitBreakerException {
 
-        CircuitBreaker<String> circuitBreaker = new CircuitBreaker<String>()
+        CircuitBreaker circuitBreaker = new CircuitBreaker()
                 .requestThreshold(5)
                 .resetIntervalIn(6000);
 
-        circuitBreaker.run(() -> service.getMessage());
-        circuitBreaker.run(() -> service.getMessage());
-        circuitBreaker.run(() -> service.getMessage());
-        circuitBreaker.run(() -> service.getMessage());
-        circuitBreaker.run(() -> service.getMessage());
-
+        CircuitBreakerException exception = null;
+            circuitBreaker.invoke(() -> service.getMessage());
+            circuitBreaker.invoke(() -> service.getMessage());
+            circuitBreaker.invoke(() -> service.getMessage());
+            circuitBreaker.invoke(() -> service.getMessage());
+            circuitBreaker.invoke(() -> service.getMessage());
+        try {
+            circuitBreaker.invoke(() -> service.getMessage());
+        } catch (CircuitBreakerException e ){
+            exception = e;
+        }
         assertThat(service.noOfCalls, is(5));
+        assertThat(exception, is(notNullValue()));
     }
 
     @Test
     public void externalServiceIsNotInvokedIfFailureThresholdIsExceededWithinResetInterval()
-            throws InterruptedException {
+            throws InterruptedException, CircuitBreakerException {
 
         CircuitBreaker circuitBreaker = new CircuitBreaker()
                 .requestThreshold(5)
                 .resetIntervalIn(1500);
 
-        circuitBreaker.run(() -> service.getMessage());
-        circuitBreaker.run(() -> service.getMessage());
-        circuitBreaker.run(() -> service.getMessage());
-        circuitBreaker.run(() -> service.getMessage());
-        circuitBreaker.run(() -> service.getMessage());
+        circuitBreaker.invoke(() -> service.getMessage());
+        circuitBreaker.invoke(() -> service.getMessage());
+        circuitBreaker.invoke(() -> service.getMessage());
+        circuitBreaker.invoke(() -> service.getMessage());
+        circuitBreaker.invoke(() -> service.getMessage());
 
         Thread.sleep(1000);
 
-        circuitBreaker.run(() -> service.getMessage());
+        CircuitBreakerException exception = null;
+        try {
+            circuitBreaker.invoke(() -> service.getMessage());
+        } catch (CircuitBreakerException e ){
+            exception = e;
+        }
 
         assertThat(service.noOfCalls, is(5));
+        assertThat(exception, is(notNullValue()));
     }
 
     @Test
     public void externalServiceIsInvokedIfResetIntervalHasElapsedAfterExceedingThreshold()
-            throws InterruptedException {
+            throws InterruptedException, CircuitBreakerException {
 
         CircuitBreaker circuitBreaker = new CircuitBreaker()
                 .requestThreshold(5)
                 .resetIntervalIn(2000);
 
-        circuitBreaker.run(() -> service.getMessage());
-        circuitBreaker.run(() -> service.getMessage());
-        circuitBreaker.run(() -> service.getMessage());
-        circuitBreaker.run(() -> service.getMessage());
-        circuitBreaker.run(() -> service.getMessage());
+        circuitBreaker.invoke(() -> service.getMessage());
+        circuitBreaker.invoke(() -> service.getMessage());
+        circuitBreaker.invoke(() -> service.getMessage());
+        circuitBreaker.invoke(() -> service.getMessage());
+        circuitBreaker.invoke(() -> service.getMessage());
 
         Thread.sleep(3000);
 
-        circuitBreaker.run(() -> service.getMessage());
+        circuitBreaker.invoke(() -> service.getMessage());
 
         assertThat(service.noOfCalls, is(6));
     }
